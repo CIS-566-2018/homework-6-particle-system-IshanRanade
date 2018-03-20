@@ -14,13 +14,23 @@ class Particle {
   }
 };
 
-class Attractor {
+abstract class Exertor {
   position: vec3;
-  power: number;
 
-  constructor(position: vec3, power: number) {
+  abstract getForce(particle: Particle): vec3;
+
+  constructor(position: vec3) {
     this.position = position;
-    this.power = power;
+  }
+}
+
+class Attractor extends Exertor {
+  position: vec3;
+
+  constructor(position: vec3) {
+    super(position);
+
+    this.position = position;
   }
 
   getForce(particle: Particle) {
@@ -50,8 +60,10 @@ class ParticleSystem {
 
   constructor() {
     this.particles = new Array<Particle>();
-    this.exertors = new Array<Attractor>();
-    this.exertors.push(new Attractor(vec3.fromValues(10,10,10), 2));
+    this.exertors = new Array<Exertor>();
+
+    this.exertors.push(new Attractor(vec3.fromValues(10,10,10)));
+    this.exertors.push()
 
     this.particleCount = 0.0;
 
