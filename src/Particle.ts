@@ -86,6 +86,8 @@ class ParticleSystem {
 
   exertors: Array<Attractor>;
 
+  rng = seedrandom(0);
+
   constructor() {
     this.particles = new Array<Particle>();
     this.exertors = new Array<Exertor>();
@@ -97,10 +99,21 @@ class ParticleSystem {
 
     let n: number = 100.0;
 
+    let maxX = 100;
+    let minX = -100;
+    let maxY = 100;
+    let minY = -100;
+    let maxZ = 100;
+    let minZ = -100;
     for(let i = 0; i < n; i++) {
       for(let j = 0; j < n; j++) {
+        let rngX: number = this.rng();
+        let rngY: number = this.rng();
+        let rngZ: number = this.rng();
+
         this.particles.push(new Particle(
-          vec3.fromValues(i, j, 0), vec4.fromValues(i / n, j / n, 1.0, 1.0)));
+          vec3.fromValues((maxX - minX) * rngX + minX, (maxY - minY) * rngY + minY, (maxZ - minZ) * rngZ + minZ), 
+            vec4.fromValues(i / n, j / n, 1.0, 1.0)));
         this.particleCount++;
       }
     }
@@ -114,6 +127,11 @@ class ParticleSystem {
       this.exertors.forEach(exertor => {
         vec3.add(force, force, exertor.getForce(particle));
       });
+
+      let maxValue = 10.0;
+      if(vec3.length(force) > maxValue) {
+        vec3.scale(force, force, maxValue / vec3.length(force));
+      }
 
       vec3.copy(particle.acceleration, force);
 
