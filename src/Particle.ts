@@ -3,6 +3,7 @@ import {vec3,vec4} from 'gl-matrix';
 var seedrandom = require('seedrandom');
 
 class Particle {
+
   color: vec4;
   position: vec3;
   velocity: vec3;
@@ -17,6 +18,7 @@ class Particle {
 };
 
 abstract class Exertor {
+
   position: vec3;
 
   abstract getForce(particle: Particle): vec3;
@@ -27,20 +29,30 @@ abstract class Exertor {
 }
 
 class Attractor extends Exertor {
-  constructor(position: vec3) {
+  
+  power: number;
+  radius: number;
+
+  constructor(position: vec3, power: number, radius: number) {
     super(position);
 
-    this.position = position;
+    this.power = power;
+    this.radius = radius;
   }
 
   getForce(particle: Particle) {
+    let distance: number = vec3.distance(this.position, particle.position);
+
+    if(distance > this.radius) {
+      return vec3.fromValues(0,0,0);
+    }
+
     let currForce = vec3.create();
     vec3.subtract(currForce, this.position, particle.position);
-    vec3.scale(currForce, currForce, 30.0);
+    vec3.scale(currForce, currForce, this.power);
 
-    let distance: number = vec3.distance(this.position, particle.position);
     if(distance > 2.0) {
-      vec3.scale(currForce, currForce, 0.001 * distance);
+      vec3.scale(currForce, currForce, 0.001 * Math.pow(distance, 2.0));
     } else {
       particle.velocity = vec3.fromValues(0,0,0);
     }
@@ -49,42 +61,74 @@ class Attractor extends Exertor {
   }
 };
 
-class Repeller extends Exertor {
-  constructor(position: vec3) {
+class Oscillator extends Exertor {
+
+  power: number;
+  radius: number;
+
+  constructor(position: vec3, power: number, radius: number) {
     super(position);
 
-    this.position = position;
+    this.power = power;
+    this.radius = radius;
   }
 
   getForce(particle: Particle) {
-    let currForce = vec3.create();
-    vec3.subtract(currForce, this.position, particle.position);
-    vec3.scale(currForce, currForce, 30.0);
-
     let distance: number = vec3.distance(this.position, particle.position);
 
-    if(distance < 10) {
-
+    if(distance > this.radius) {
+      return vec3.fromValues(0,0,0);
     }
 
-    if(distance > 2.0) {
-      vec3.scale(currForce, currForce, 0.001 * distance);
-    } else {
-      particle.velocity = vec3.fromValues(0,0,0);
+    let currForce = vec3.create();
+    vec3.subtract(currForce, this.position, particle.position);
+    vec3.scale(currForce, currForce, this.power);
+
+    vec3.scale(currForce, currForce, 0.001 * Math.pow(distance, 2.0));
+
+    return currForce;
+  }
+}
+
+class Repeller extends Exertor {
+
+  power: number;
+  radius: number;
+
+  constructor(position: vec3, power: number, radius: number) {
+    super(position);
+
+    this.power = power;
+    this.radius = radius;
+  }
+
+  getForce(particle: Particle) {
+    let distance: number = vec3.distance(this.position, particle.position);
+
+    if(distance > this.radius) {
+      return vec3.fromValues(0,0,0);
     }
+
+    let currForce = vec3.create();
+    vec3.subtract(currForce, this.position, particle.position);
+    vec3.scale(currForce, currForce, -1);
+    vec3.scale(currForce, currForce, this.power);
+
+    vec3.scale(currForce, currForce, 1.0 / Math.pow(distance, 2.0));
 
     return currForce;
   }
 }
 
 class ParticleSystem {
+
   particles: Array<Particle>;
   particleCount: number;
 
   offsetsArray: Float32Array;
   colorsArray: Float32Array;
 
-  exertors: Array<Attractor>;
+  exertors: Array<Exertor>;
 
   rng = seedrandom(0);
 
@@ -92,7 +136,7 @@ class ParticleSystem {
     this.particles = new Array<Particle>();
     this.exertors = new Array<Exertor>();
 
-    this.exertors.push(new Attractor(vec3.fromValues(10,10,10)));
+    this.exertors.push(new Repeller(vec3.fromValues(10,10,10), 30.0, 100.0));
     this.exertors.push()
 
     this.particleCount = 0.0;
