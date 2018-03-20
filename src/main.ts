@@ -6,6 +6,7 @@ import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
+import ParticleHolder from './Particle';
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
@@ -17,30 +18,25 @@ const controls = {
 let square: Square;
 let time: number = 0.0;
 
+let particleHolder: ParticleHolder;
+
 function loadScene() {
   square = new Square();
   square.create();
 
-  // Set up particles here. Hard-coded example data for now
-  let offsetsArray = [];
-  let colorsArray = [];
-  let n: number = 100.0;
-  for(let i = 0; i < n; i++) {
-    for(let j = 0; j < n; j++) {
-      offsetsArray.push(i);
-      offsetsArray.push(j);
-      offsetsArray.push(0);
+  particleHolder = new ParticleHolder();
+  particleHolder.processBuffers();
 
-      colorsArray.push(i / n);
-      colorsArray.push(j / n);
-      colorsArray.push(1.0);
-      colorsArray.push(1.0); // Alpha channel
-    }
-  }
-  let offsets: Float32Array = new Float32Array(offsetsArray);
-  let colors: Float32Array = new Float32Array(colorsArray);
-  square.setInstanceVBOs(offsets, colors);
-  square.setNumInstances(n * n); // 10x10 grid of "particles"
+  console.log(particleHolder.colorsArray.length);
+  console.log(particleHolder.offsetsArray.length);
+  console.log(particleHolder.particleCount);
+
+  console.log();
+  console.log(particleHolder.offsetsArray);
+  console.log(particleHolder.colorsArray);
+
+  square.setInstanceVBOs(particleHolder.getOffsetsArray(), particleHolder.getColorsArray());
+  square.setNumInstances(particleHolder.getInstanceCount());
 }
 
 function main() {
@@ -68,7 +64,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(50, 50, 10), vec3.fromValues(50, 50, 0));
+  const camera = new Camera(vec3.fromValues(50, 50, 10), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.2, 0.2, 0.2, 1);
