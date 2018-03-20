@@ -6,7 +6,7 @@ import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
-import ParticleHolder from './Particle';
+import ParticleSystem from './Particle';
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
@@ -18,25 +18,21 @@ const controls = {
 let square: Square;
 let time: number = 0.0;
 
-let particleHolder: ParticleHolder;
+let particleSystem: ParticleSystem;
 
 function loadScene() {
   square = new Square();
   square.create();
 
-  particleHolder = new ParticleHolder();
-  particleHolder.processBuffers();
+  particleSystem = new ParticleSystem();
+}
 
-  console.log(particleHolder.colorsArray.length);
-  console.log(particleHolder.offsetsArray.length);
-  console.log(particleHolder.particleCount);
+function update() {
+  particleSystem.update();
+  particleSystem.processBuffers();
 
-  console.log();
-  console.log(particleHolder.offsetsArray);
-  console.log(particleHolder.colorsArray);
-
-  square.setInstanceVBOs(particleHolder.getOffsetsArray(), particleHolder.getColorsArray());
-  square.setNumInstances(particleHolder.getInstanceCount());
+  square.setInstanceVBOs(particleSystem.getOffsetsArray(), particleSystem.getColorsArray());
+  square.setNumInstances(particleSystem.getInstanceCount());
 }
 
 function main() {
@@ -78,6 +74,8 @@ function main() {
 
   // This function will be called every frame
   function tick() {
+    update();
+
     camera.update();
     stats.begin();
     lambert.setTime(time++);
