@@ -1,5 +1,7 @@
 import {vec3,vec4} from 'gl-matrix';
 
+var seedrandom = require('seedrandom');
+
 class Particle {
   color: vec4;
   position: vec3;
@@ -25,8 +27,6 @@ abstract class Exertor {
 }
 
 class Attractor extends Exertor {
-  position: vec3;
-
   constructor(position: vec3) {
     super(position);
 
@@ -48,6 +48,34 @@ class Attractor extends Exertor {
     return currForce;
   }
 };
+
+class Repeller extends Exertor {
+  constructor(position: vec3) {
+    super(position);
+
+    this.position = position;
+  }
+
+  getForce(particle: Particle) {
+    let currForce = vec3.create();
+    vec3.subtract(currForce, this.position, particle.position);
+    vec3.scale(currForce, currForce, 30.0);
+
+    let distance: number = vec3.distance(this.position, particle.position);
+
+    if(distance < 10) {
+
+    }
+
+    if(distance > 2.0) {
+      vec3.scale(currForce, currForce, 0.001 * distance);
+    } else {
+      particle.velocity = vec3.fromValues(0,0,0);
+    }
+
+    return currForce;
+  }
+}
 
 class ParticleSystem {
   particles: Array<Particle>;
