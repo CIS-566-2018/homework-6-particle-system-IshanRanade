@@ -153,10 +153,6 @@ class ParticleSystem {
 
     this.exertors.push(new NoneExertor());
 
-    // this.exertors.push(new Attractor(vec3.fromValues(10,10,10), 30.0, 100.0));
-    // this.exertors.push(new Attractor(vec3.fromValues(-10,-10,-10), 30.0, 100.0));
-    // this.exertors.push(new Attractor(vec3.fromValues(10,-10,-10), 30.0, 100.0));
-
     this.particleCount = 0.0;
 
     let n: number = 200.0;
@@ -216,9 +212,18 @@ class ParticleSystem {
       this.offsetsArray[i*3+1] = particle.position[1];
       this.offsetsArray[i*3+2] = particle.position[2];
 
-      this.colorsArray[i*4] = particle.color[0];
-      this.colorsArray[i*4+1] = particle.color[1];
-      this.colorsArray[i*4+2] = particle.color[2];
+      let maxVelocity: number = 30.0;
+      let currVelocity: number = Math.min(maxVelocity, vec3.length(particle.velocity));
+      let u: number = currVelocity / maxVelocity;
+
+      let baseColor: vec3 = vec3.fromValues(particle.color[0], particle.color[1], particle.color[2]);
+      let speedColor: vec3 = vec3.fromValues(1,0,0);
+
+      let finalColor: vec3 = vec3.add(vec3.create(), vec3.scale(vec3.create(), baseColor, 1-u), vec3.scale(vec3.create(), speedColor, u));
+
+      this.colorsArray[i*4] = finalColor[0];
+      this.colorsArray[i*4+1] = finalColor[1];
+      this.colorsArray[i*4+2] = finalColor[2];
       this.colorsArray[i*4+3] = particle.color[3];
     }
   }
@@ -237,6 +242,20 @@ class ParticleSystem {
 
   updateUserForce(position: vec3) {
     this.exertors[0] = new Attractor(position, 30, 100);
+  }
+
+  cancelUserForce() {
+    this.exertors[0] = new NoneExertor();
+  }
+
+  addNewForce(position: vec3, type: string) {
+    if(type == "Oscillator") {
+      this.exertors.push(new Oscillator(position, 30, 100));
+    } else if(type == "Attractor") {
+      this.exertors.push(new Attractor(position, 30, 100));
+    } else if(type == "Repeller") {
+      this.exertors.push(new Repeller(position, 30, 100));
+    }
   }
 
 };

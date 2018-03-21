@@ -49,44 +49,53 @@ function mouseMove(e: MouseEvent) {
   this.mousePosition[1] = e.clientY - rect.top;
 }
 
-function keyPressed(e: Event) {
+function getWorldPosition(mouseX: number, mouseY: number) {
+  let inside: vec4 = vec4.fromValues(mouseX / window.innerWidth * 2 - 1, 1 - mouseY / window.innerHeight * 2, 1, 1);
+  vec4.scale(inside, inside, camera.far);
+  let tempVec: vec4 = vec4.transformMat4(vec4.create(), inside, camera.projectionMatrix);
+
+  let l0: vec3 = vec3.fromValues(tempVec[0], tempVec[1], tempVec[2]);
+
+  let l: vec3 = vec3.create();
+  vec3.subtract(l, l0, camera.position);
+  vec3.normalize(l, l);
+  let eye = vec3.create();
+  vec3.copy(eye, camera.position);
+
+  let n: vec3 = vec3.create();
+  vec3.subtract(n, camera.position, camera.target);
+  vec3.normalize(n, n);
+  let p0: vec3 = vec3.add(vec3.create(), camera.target, camera.up);
+
+  let denom: number = vec3.dot(n, l);
+  let p010: vec3 = vec3.subtract(vec3.create(), p0, l0);
+  
+  let t: number = vec3.dot(p010, n) / denom;
+
+  let worldPoint: vec3 = vec3.create();
+  vec3.scale(worldPoint, l, t);
+  vec3.add(worldPoint, worldPoint, l0);
+
+  return worldPoint;
+}
+
+function keyPressed(e: KeyboardEvent) {
+  if(this.mousePosition != null && e.key == "q") {
+    particleSystem.updateUserForce(getWorldPosition(this.mousePosition[0], this.mousePosition[1]));
+  }
+}
+
+function keyUp(e: KeyboardEvent) {
   if(this.mousePosition != null) {
-    var mouseX = this.mousePosition[0];
-    var mouseY = this.mousePosition[1];
-
-    //console.log(mouseX + " " + mouseY);
-
-    let inside: vec4 = vec4.fromValues(mouseX / window.innerWidth * 2 - 1, 1 - mouseY / window.innerHeight * 2, 1, 1);
-    vec4.scale(inside, inside, camera.far);
-    let tempVec: vec4 = vec4.transformMat4(vec4.create(), inside, camera.projectionMatrix);
-
-    let l0: vec3 = vec3.fromValues(tempVec[0], tempVec[1], tempVec[2]);
-
-    let l: vec3 = vec3.create();
-    vec3.subtract(l, l0, camera.position);
-    vec3.normalize(l, l);
-    let eye = vec3.create();
-    vec3.copy(eye, camera.position);
-
-    let n: vec3 = vec3.create();
-    vec3.subtract(n, camera.position, camera.target);
-    let p0: vec3 = vec3.create();
-    vec3.copy(p0, camera.up);
-
-    let denom: number = vec3.dot(n, l);
-    let p010: vec3 = vec3.create();
-    vec3.subtract(p010, p0, l0);
-    
-    let t: number = vec3.dot(p010, n) / denom;
-
-    let worldPoint: vec3 = vec3.create();
-    vec3.scale(worldPoint, l, t);
-    vec3.add(worldPoint, worldPoint, l0);
-
-    console.log(worldPoint[0] + ", " + worldPoint[1] + ", " + worldPoint[2]);
-
-    particleSystem.updateUserForce(worldPoint);
-    //return vec3.dot(p010, n) / denom;
+    if(e.key == "q") {
+      particleSystem.cancelUserForce();
+    } else if(e.key == "w") {
+      particleSystem.addNewForce(getWorldPosition(this.mousePosition[0], this.mousePosition[1]), "Attractor");
+    } else if(e.key == "e") {
+      particleSystem.addNewForce(getWorldPosition(this.mousePosition[0], this.mousePosition[1]), "Repeller");
+    } else if(e.key == "r") {
+      particleSystem.addNewForce(getWorldPosition(this.mousePosition[0], this.mousePosition[1]), "Oscillator");
+    }
   }
 }
 
@@ -101,6 +110,7 @@ function main() {
 
   //document.addEventListener('keyup', keyPressed, false);
   document.addEventListener('keydown', keyPressed, false);
+  document.addEventListener('keyup', keyUp, false);
   document.addEventListener('mousemove', mouseMove, false);
 
   // Add controls to the gui
