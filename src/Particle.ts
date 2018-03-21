@@ -28,6 +28,17 @@ abstract class Exertor {
   }
 };
 
+class NoneExertor extends Exertor {
+
+  constructor() {
+    super(vec3.fromValues(0,0,0));
+  }
+
+  getForce(particle: Particle) {
+    return vec3.fromValues(0,0,0);
+  }
+};
+
 class Attractor extends Exertor {
   
   power: number;
@@ -52,7 +63,11 @@ class Attractor extends Exertor {
     vec3.scale(currForce, currForce, this.power);
 
     if(distance > 2.0) {
-      vec3.scale(currForce, currForce, 0.0001 * Math.pow(distance, 2.0));
+      vec3.scale(currForce, currForce, 0.0001 * distance * distance);
+
+      if(distance < 6.0) {
+        vec3.scale(particle.velocity, particle.velocity, 0.8);
+      }
     } else {
       particle.velocity = vec3.fromValues(0,0,0);
     }
@@ -136,9 +151,11 @@ class ParticleSystem {
     this.particles = new Array<Particle>();
     this.exertors = new Array<Exertor>();
 
-    this.exertors.push(new Attractor(vec3.fromValues(10,10,10), 30.0, 100.0));
-    this.exertors.push(new Attractor(vec3.fromValues(-10,-10,-10), 30.0, 100.0));
-    this.exertors.push()
+    this.exertors.push(new NoneExertor());
+
+    // this.exertors.push(new Attractor(vec3.fromValues(10,10,10), 30.0, 100.0));
+    // this.exertors.push(new Attractor(vec3.fromValues(-10,-10,-10), 30.0, 100.0));
+    // this.exertors.push(new Attractor(vec3.fromValues(10,-10,-10), 30.0, 100.0));
 
     this.particleCount = 0.0;
 
@@ -168,7 +185,7 @@ class ParticleSystem {
   }
 
   update() {
-    let deltaT = 1.0/60.0;
+    let deltaT = 1.0/20.0;
     for(let i = 0; i < this.particles.length; ++i) {
       let particle = this.particles[i];
   
@@ -216,6 +233,10 @@ class ParticleSystem {
 
   getInstanceCount() {
     return this.particleCount;
+  }
+
+  updateUserForce(position: vec3) {
+    this.exertors[0] = new Attractor(position, 30, 100);
   }
 
 };
