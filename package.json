@@ -4,10 +4,13 @@
     "build": "webpack"
   },
   "devDependencies": {
+    "@types/bluebird": "^3.5.20",
+    "@types/core-js": "^0.9.36",
+    "@types/dat-gui": "^0.6.3",
+    "@types/es6-promise": "^3.3.0",
+    "@types/gl-matrix": "^2.4.0",
     "@types/node": "^9.3.0",
     "@types/webgl2": "0.0.2",
-    "@types/dat-gui": "^0.6.3",
-    "@types/gl-matrix": "^2.4.0",
     "ts-loader": "^3.2.0",
     "typescript": "^2.6.2",
     "webpack": "^3.10.0",
@@ -16,6 +19,7 @@
   },
   "dependencies": {
     "3d-view-controls": "^2.2.0",
+    "bluebird": "^3.5.1",
     "dat-gui": "^0.5.0",
     "gl-matrix": "^2.4.0",
     "seedrandom": "^2.4.3",
