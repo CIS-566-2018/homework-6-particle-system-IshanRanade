@@ -29,7 +29,6 @@ function loadScene() {
 
 function update() {
   particleSystem.update();
-  particleSystem.processBuffers();
 
   square.setInstanceVBOs(particleSystem.getOffsetsArray(), particleSystem.getColorsArray());
   square.setNumInstances(particleSystem.getInstanceCount());

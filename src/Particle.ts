@@ -26,7 +26,7 @@ abstract class Exertor {
   constructor(position: vec3) {
     this.position = position;
   }
-}
+};
 
 class Attractor extends Exertor {
   
@@ -52,7 +52,7 @@ class Attractor extends Exertor {
     vec3.scale(currForce, currForce, this.power);
 
     if(distance > 2.0) {
-      vec3.scale(currForce, currForce, 0.001 * Math.pow(distance, 2.0));
+      vec3.scale(currForce, currForce, 0.0001 * Math.pow(distance, 2.0));
     } else {
       particle.velocity = vec3.fromValues(0,0,0);
     }
@@ -88,7 +88,7 @@ class Oscillator extends Exertor {
 
     return currForce;
   }
-}
+};
 
 class Repeller extends Exertor {
 
@@ -118,7 +118,7 @@ class Repeller extends Exertor {
 
     return currForce;
   }
-}
+};
 
 class ParticleSystem {
 
@@ -136,12 +136,13 @@ class ParticleSystem {
     this.particles = new Array<Particle>();
     this.exertors = new Array<Exertor>();
 
-    this.exertors.push(new Repeller(vec3.fromValues(10,10,10), 30.0, 100.0));
+    this.exertors.push(new Attractor(vec3.fromValues(10,10,10), 30.0, 100.0));
+    this.exertors.push(new Attractor(vec3.fromValues(-10,-10,-10), 30.0, 100.0));
     this.exertors.push()
 
     this.particleCount = 0.0;
 
-    let n: number = 100.0;
+    let n: number = 200.0;
 
     let maxX = 100;
     let minX = -100;
@@ -161,11 +162,16 @@ class ParticleSystem {
         this.particleCount++;
       }
     }
+
+    this.offsetsArray = new Float32Array(this.particleCount * 3);
+    this.colorsArray = new Float32Array(this.particleCount * 4);
   }
 
   update() {
     let deltaT = 1.0/60.0;
-    this.particles.forEach(particle => {
+    for(let i = 0; i < this.particles.length; ++i) {
+      let particle = this.particles[i];
+  
       let force = vec3.fromValues(0,0,0);
 
       this.exertors.forEach(exertor => {
@@ -188,15 +194,6 @@ class ParticleSystem {
       vec3.copy(positionChange, particle.velocity);
       vec3.scale(positionChange, positionChange, deltaT);
       vec3.add(particle.position, particle.position, positionChange);
-    });
-  }
-
-  processBuffers() {
-    this.offsetsArray = new Float32Array(this.particleCount * 3);
-    this.colorsArray = new Float32Array(this.particleCount * 4);
-
-    for(let i: number = 0; i < this.particleCount; ++i) {
-      let particle = this.particles[i];
 
       this.offsetsArray[i*3]   = particle.position[0];
       this.offsetsArray[i*3+1] = particle.position[1];
