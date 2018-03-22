@@ -25,7 +25,7 @@ Repeller
 ![](shot-oscillator.png)
 Oscillator
 
-I also created an abstract Exertor class that exposed an interface for applying a force on a particle.  I implemented three types of Exertors.  An Attractor pulls particles near, a Repeller pushes them away, and an Oscillator makes them oscillate around it.  I used Euler integration to calculate the changes in attributes for each time step.
+I also created an abstract Exertor class that exposed an interface for applying a force on a particle.  I implemented three types of Exertors.  An Attractor pulls particles near, a Repeller pushes them away, and an Oscillator makes them oscillate around it.  I used Euler integration to calculate the changes in attributes for each time step.  I had an array of exertors that exist in the scene, and at each update, I would would look through each particle and then each exertor, and calculate the current force exerted on this particle by all the forces in the scene.  Then with this new force, I would update the acceleration, velocity, position, and color of the particle.
 
 ## GUI
 
@@ -35,13 +35,15 @@ The user also has the ability to place an Exertor in the scene.  Point that mous
 
 ## Color
 
-![](shot-spaceship.png)
-
-![](shot-knuckles.png)
+![](shot-color.png)
 
 I had the particles become more red as their velocity increased, signifying the kinetic energy of the particle.  It maxes out at a pure red.  When stationary, the particle is purely its base color.
 
 ## Mesh Attraction
+
+![](shot-spaceship.png)
+
+![](shot-knuckles.png)
 
 I loaded up to meshes that you can choose to create a constellation of, Knuckles and a Spaceship.  To do the attraction, I had each particle in the scene assigned to one vertex on the mesh, and had it have its own attractor at that position.  So, every particle would only have a single attractor that it would follow, and once every particle found its attractor, the shape would look like the mesh.
 
