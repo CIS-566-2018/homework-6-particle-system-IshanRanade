@@ -204,7 +204,7 @@ class ParticleSystem {
 
     this.particleCount = 0.0;
 
-    let n: number = 220.0;
+    let n: number = 200.0;
 
     let maxX = 100;
     let minX = -100;
@@ -326,8 +326,6 @@ class ParticleSystem {
         vec3.scale(vertexPosition, vertexPosition, 0.4);
       } else if(this.currentMesh == "Spaceship") {
         vec3.scale(vertexPosition, vertexPosition, 50.0);
-      } else if(this.currentMesh == "Wall-E") {
-        vec3.scale(vertexPosition, vertexPosition, 5.0);
       }
 
       this.particleIndexToVertex[randomIndex] = new Attractor(vertexPosition, 30, Number.MAX_VALUE);

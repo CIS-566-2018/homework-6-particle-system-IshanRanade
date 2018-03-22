@@ -12,9 +12,8 @@ var OBJ = require('webgl-obj-loader');
 var meshes: any;
 window.onload = function() {
   OBJ.downloadMeshes({
-    'Spaceship': 'src/objs/walle.obj',
-    'Knuckles': 'src/objs/knuckles.obj',
-    'Wall-E': 'src/objs/walle.obj'
+    'Spaceship': 'src/objs/rover.obj',
+    'Knuckles': 'src/objs/knuckles.obj'
   }, function(m: any) {
     meshes = m;
     main();
@@ -149,7 +148,7 @@ function main() {
   gui.add({ "Activate Mesh": false}, "Activate Mesh").
     listen().
     onFinishChange(activateMesh);
-  gui.add(controls, 'Mesh', [ 'Spaceship', 'Knuckles', 'Wall-E' ]).onChange(function(value: string) {
+  gui.add(controls, 'Mesh', [ 'Spaceship', 'Knuckles' ]).onChange(function(value: string) {
     particleSystem.currentMesh = value;
   });
 
