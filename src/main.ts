@@ -12,14 +12,16 @@ var OBJ = require('webgl-obj-loader');
 var meshes: any;
 window.onload = function() {
   OBJ.downloadMeshes({
-    'Rover': 'src/objs/rover.obj'
+    'Spaceship': 'src/objs/walle.obj',
+    'Knuckles': 'src/objs/knuckles.obj',
+    'Wall-E': 'src/objs/walle.obj'
   }, function(m: any) {
     meshes = m;
     main();
   });
 }
 
-let startMesh = 'Rover';
+let startMesh = 'Knuckles';
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
@@ -147,7 +149,9 @@ function main() {
   gui.add({ "Activate Mesh": false}, "Activate Mesh").
     listen().
     onFinishChange(activateMesh);
-  gui.add(controls, 'Mesh', [ 'Rover' ]);
+  gui.add(controls, 'Mesh', [ 'Spaceship', 'Knuckles', 'Wall-E' ]).onChange(function(value: string) {
+    particleSystem.currentMesh = value;
+  });
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
