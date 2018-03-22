@@ -5,7 +5,6 @@
     "noImplicitAny": true,
     "module": "es6",
     "target": "es6",
-    "allowJs": true,
-    "lib": ["webworker", "es5", "scripthost", "es6"]
+    "allowJs": true
   }
 }
