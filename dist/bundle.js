@@ -3377,12 +3377,14 @@ window.onload = function () {
     });
 };
 let startMesh = 'Knuckles';
+let startMouseExertorType = 'Attractor';
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
     tesselations: 5,
     'Load Scene': loadScene,
-    'Mesh': startMesh
+    'Mesh': startMesh,
+    'Mouse Force Type': 'Attractor'
 };
 let square;
 let time = 0.0;
@@ -3392,7 +3394,7 @@ let mousePosition = null;
 function loadScene() {
     square = new __WEBPACK_IMPORTED_MODULE_3__geometry_Square__["a" /* default */]();
     square.create();
-    particleSystem = new __WEBPACK_IMPORTED_MODULE_8__Particle__["a" /* default */](meshes, startMesh);
+    particleSystem = new __WEBPACK_IMPORTED_MODULE_8__Particle__["a" /* default */](meshes, startMesh, startMouseExertorType);
 }
 function update() {
     particleSystem.update();
@@ -3481,6 +3483,9 @@ function main() {
         onFinishChange(activateMesh);
     gui.add(controls, 'Mesh', ['Spaceship', 'Knuckles']).onChange(function (value) {
         particleSystem.currentMesh = value;
+    });
+    gui.add(controls, 'Mouse Force Type', ['Attractor', 'Repeller', 'Oscillator']).onChange(function (value) {
+        particleSystem.changeMouseExertorType(value);
     });
     // get canvas and webgl context
     const canvas = document.getElementById('canvas');
@@ -15528,7 +15533,7 @@ class Repeller extends Exertor {
 }
 ;
 class ParticleSystem {
-    constructor(meshes, currentMesh) {
+    constructor(meshes, currentMesh, mouseExertorType) {
         this.rng = seedrandom(0);
         this.particles = new Array();
         this.exertors = new Array();
@@ -15538,6 +15543,7 @@ class ParticleSystem {
         this.particleIndexToVertex = {};
         this.exertors.push(new NoneExertor());
         this.particleCount = 0.0;
+        this.mouseExertorType = mouseExertorType;
         let n = 200.0;
         let maxX = 100;
         let minX = -100;
@@ -15610,7 +15616,15 @@ class ParticleSystem {
         return this.particleCount;
     }
     updateUserForce(position) {
-        this.exertors[0] = new Attractor(position, 30, 100);
+        if (this.mouseExertorType == "Attractor") {
+            this.exertors[0] = new Attractor(position, 30, 100);
+        }
+        else if (this.mouseExertorType == "Repeller") {
+            this.exertors[0] = new Repeller(position, 30, 100);
+        }
+        else if (this.mouseExertorType == "Oscillator") {
+            this.exertors[0] = new Oscillator(position, 30, 100);
+        }
     }
     cancelUserForce() {
         this.exertors[0] = new NoneExertor();
@@ -15642,6 +15656,9 @@ class ParticleSystem {
     }
     deactivateMesh() {
         this.meshesActivated = false;
+    }
+    changeMouseExertorType(value) {
+        this.mouseExertorType = value;
     }
 }
 ;
