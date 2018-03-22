@@ -35,7 +35,9 @@ The user also has the ability to place an Exertor in the scene.  Point that mous
 
 ## Color
 
-![](shot-color.png)
+![](shot-spaceship.png)
+
+![](shot-knuckles.png)
 
 I had the particles become more red as their velocity increased, signifying the kinetic energy of the particle.  It maxes out at a pure red.  When stationary, the particle is purely its base color.
 
@@ -49,4 +51,4 @@ For extra credit I chose to have the user able to place a custom force type at a
 
 ## Warnings
 
-My ray cast implementation is not currently working currently.  So if you zoom out too far or rotate the camera and then try to click the mouse and create a force at the mouse position, the force will not be placed where you expect.  For best results, zoom out just a little so you can see the box of particles and do not rotate the camera, unless you are done placing forces and just want to see the results or you are looking at the mesh constellation.
+My ray cast implementation is not currently working currently.  So if you zoom out too far or rotate the camera and then try to click the mouse and create a force at the mouse position, the force will not be placed where you expect.  For best results, zoom out just a little so you can see the box of particles and do not rotate the camera, unless you are done placing forces and just want to see the results or you are looking at the mesh constellation.  Also, the demo link takes about 20 seconds to load, so you may have to wait for it.
