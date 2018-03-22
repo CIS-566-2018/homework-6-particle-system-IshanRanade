@@ -8,11 +8,25 @@ import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import ParticleSystem from './Particle';
 
+var OBJ = require('webgl-obj-loader');
+var meshes: any;
+window.onload = function() {
+  OBJ.downloadMeshes({
+    'Rover': 'src/objs/rover.obj'
+  }, function(m: any) {
+    meshes = m;
+    main();
+  });
+}
+
+let startMesh = 'Rover';
+
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
+  'Mesh': startMesh
 };
 
 let square: Square;
@@ -28,7 +42,7 @@ function loadScene() {
   square = new Square();
   square.create();
 
-  particleSystem = new ParticleSystem();
+  particleSystem = new ParticleSystem(meshes, startMesh);
 }
 
 function update() {
@@ -99,6 +113,21 @@ function keyUp(e: KeyboardEvent) {
   }
 }
 
+let meshActivated = false;
+function activateMesh() {
+  meshActivated = !meshActivated;
+
+  if(meshActivated) {
+    particleSystem.activateMesh();
+  } else {
+    particleSystem.deactivateMesh();
+  }
+}
+
+function changeMesh() {
+
+}
+
 function main() {
   // Initial display for framerate
   const stats = Stats();
@@ -115,6 +144,10 @@ function main() {
 
   // Add controls to the gui
   const gui = new DAT.GUI();
+  gui.add({ "Activate Mesh": false}, "Activate Mesh").
+    listen().
+    onFinishChange(activateMesh);
+  gui.add(controls, 'Mesh', [ 'Rover' ]);
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -132,7 +165,7 @@ function main() {
   camera = new Camera(vec3.fromValues(50, 50, 10), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
-  renderer.setClearColor(0.2, 0.2, 0.2, 1);
+  renderer.setClearColor(0.05, 0.05, 0.1, 1);
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ONE, gl.ONE); // Additive blending
 
@@ -172,5 +205,3 @@ function main() {
   // Start the render loop
   tick();
 }
-
-main();

@@ -76,6 +76,43 @@ class Attractor extends Exertor {
   }
 };
 
+class MeshAttractor extends Exertor {
+  
+  power: number;
+  radius: number;
+
+  constructor(position: vec3, power: number, radius: number) {
+    super(position);
+
+    this.power = power;
+    this.radius = radius;
+  }
+
+  getForce(particle: Particle) {
+    let distance: number = vec3.distance(this.position, particle.position);
+
+    if(distance > this.radius) {
+      return vec3.fromValues(0,0,0);
+    }
+
+    let currForce = vec3.create();
+    vec3.subtract(currForce, this.position, particle.position);
+    vec3.scale(currForce, currForce, this.power);
+
+    if(distance > 2.0) {
+      vec3.scale(currForce, currForce, 0.0001 * distance * distance);
+
+      if(distance < 6.0) {
+        vec3.scale(particle.velocity, particle.velocity, 0.8);
+      }
+    } else {
+      particle.velocity = vec3.fromValues(0,0,0);
+    }
+
+    return currForce;
+  }
+};
+
 class Oscillator extends Exertor {
 
   power: number;
@@ -147,9 +184,21 @@ class ParticleSystem {
 
   rng = seedrandom(0);
 
-  constructor() {
+  meshes: any;
+  meshesActivated: boolean;
+  currentMesh: string;
+
+  particleIndexToVertex: { [key:number]:Exertor; };
+
+  constructor(meshes: any, currentMesh: string) {
     this.particles = new Array<Particle>();
     this.exertors = new Array<Exertor>();
+
+    this.meshes = meshes;
+    this.meshesActivated = false;
+    this.currentMesh = currentMesh;
+
+    this.particleIndexToVertex = {};
 
     this.exertors.push(new NoneExertor());
 
@@ -182,14 +231,21 @@ class ParticleSystem {
 
   update() {
     let deltaT = 1.0/20.0;
+    
     for(let i = 0; i < this.particles.length; ++i) {
       let particle = this.particles[i];
   
       let force = vec3.fromValues(0,0,0);
 
-      this.exertors.forEach(exertor => {
-        vec3.add(force, force, exertor.getForce(particle));
-      });
+      if(this.meshesActivated) {
+        if(this.particleIndexToVertex[i] != undefined) {
+          vec3.add(force, force, this.particleIndexToVertex[i].getForce(particle));
+        }
+      } else {
+        this.exertors.forEach(exertor => {
+          vec3.add(force, force, exertor.getForce(particle));
+        });
+      }
 
       let maxValue = 10.0;
       if(vec3.length(force) > maxValue) {
@@ -256,6 +312,21 @@ class ParticleSystem {
     } else if(type == "Repeller") {
       this.exertors.push(new Repeller(position, 30, 100));
     }
+  }
+
+  activateMesh() {
+    this.meshesActivated = true;
+
+    for(let i: number = 0; i < this.meshes[this.currentMesh].vertices.length; i += 3) {
+      let randomIndex: number = Math.floor(this.rng() * this.particleCount);
+      this.particleIndexToVertex[randomIndex] = new Attractor(
+        vec3.fromValues(this.meshes[this.currentMesh].vertices[i], this.meshes[this.currentMesh].vertices[i+1], this.meshes[this.currentMesh].vertices[i+2]),
+        30, 100);
+    }
+  }
+
+  deactivateMesh() {
+
   }
 
 };
