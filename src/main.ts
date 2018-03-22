@@ -21,13 +21,15 @@ window.onload = function() {
 }
 
 let startMesh = 'Knuckles';
+let startMouseExertorType = 'Attractor';
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
-  'Mesh': startMesh
+  'Mesh': startMesh,
+  'Mouse Force Type': 'Attractor'
 };
 
 let square: Square;
@@ -43,7 +45,7 @@ function loadScene() {
   square = new Square();
   square.create();
 
-  particleSystem = new ParticleSystem(meshes, startMesh);
+  particleSystem = new ParticleSystem(meshes, startMesh, startMouseExertorType);
 }
 
 function update() {
@@ -151,6 +153,9 @@ function main() {
   gui.add(controls, 'Mesh', [ 'Spaceship', 'Knuckles' ]).onChange(function(value: string) {
     particleSystem.currentMesh = value;
   });
+  gui.add(controls, 'Mouse Force Type', ['Attractor', 'Repeller', 'Oscillator']).onChange(function(value: string) {
+    particleSystem.changeMouseExertorType(value);
+  })
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');

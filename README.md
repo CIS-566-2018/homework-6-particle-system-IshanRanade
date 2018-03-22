@@ -1,43 +1,48 @@
 
 # Project 6: Particle System
 
-**Goal:** to make physics-based procedural animation of particles and to practice using OpenGL's instanced rendering system.
+# Particles
 
-**Inspiration:** DMD and CGGT alumnus Nop Jiarathanakul's [Particle Dream application](http://www.iamnop.com/particles/).
+![](shot-start.png)
 
-## Particle collection (30 points)
-Add whatever code you feel is necessary to your Typescript files to support a collection of particles that move over time and interact with various forces in the environment. Something like a `Particle` class could be helpful, but is not strictly necessary. At minimum, each particle should track position, velocity, and acceleration, and make use of an accurate time step value from within `main.ts`'s `tick()` function. You may use any integration method you see fit, such as Euler, Verlet, or Runge-Kutta.
+# Demo Link
 
-You'll probably want to test your code on a small set of particles at first, and with some simple directional forces just to make sure your particles move
-as expected.
+https://ishanranade.github.io/ParticleWorld/
 
-## Procedural coloration and shaping of particles (15 points)
-Your particles' colors should be determined in some procedural manner, whether it's based on velocity, time, position, or distance to target point. Your particle coloration scheme should follow one of the color palette techniques discussed in Tuesday's class so that your particle collection seems coherently colored. The shape of your particles may be whatever you wish (you're not limited to the basic gradiated circle we provided in the base code). You can even use a texture on your particle surface if you wish. Feel free to set up another instanced data VBO to vary the shape of your particles within the same scene.
+# Technical Details
 
-## Interactive forces (25 points)
-Allow the user to click on the scene to attract and repel particles from the cursor (consider ray-casting from the clicked point to place a 3D point in the scene from which particles can flee or move towards).
+## Particle collection
+I created a ParticleSystem class that stored information about the particles in the scene.  I also had a Particle class that kept information about the position, velocity, acceleration, and color of a specific particle.  
 
-You might also consider allowing the user the option of activating "force fields", i.e. invisible 3D noise functions that act as forces on the particles as they move through the scene. You might even consider implementing something like [curl noise](https://petewerner.blogspot.com/2015/02/intro-to-curl-noise.html) to move your particles. Creating a visualization of these fields by drawing small `GL_LINES` in the direction of the force every N units in the world may be helpful for determining if your code works as expected.
+## Interactive Forces
 
-## Mesh surface attraction (20 points)
-Give the user the option of selecting a mesh from a drop-down menu in your GUI and have a subset of your particles become attracted to points on the surface of the mesh. To start, try just having each vertex on the mesh attract one unique particle in your collection. For extra credit, try generating points on the surfaces of the mesh faces that will attract more particles. Consider this method of warping a 2D point with X, Y values in the range [0, 1) to the barycentric coordinates (u, v) of any arbitrary triangle:
+![](shot-attractor.png)
+Attractor
 
-`(u, v) = (1 - sqrt(x), y * sqrt(x))`
+![](shot-repeller.png)
+Repeller
 
-You can map these (u, v) coordinates to a point on any triangle using this method from `Physically Based Rendering From Theory to Implementation, Third Edition`'s chapter on triangle meshes:
+![](shot-oscillator.png)
+Oscillator
 
-![](pbrt.jpg)
+I also created an abstract Exertor class that exposed an interface for applying a force on a particle.  I implemented three types of Exertors.  An Attractor pulls particles near, a Repeller pushes them away, and an Oscillator makes them oscillate around it.  I used Euler integration to calculate the changes in attributes for each time step.
 
-Consider pre-generating these mesh attractor points at load time so your program runs in real time as you swap out meshes.
+## GUI
 
-## \~\*\~\*\~A E S T H E T I C\~\*\~\*\~ (10 points)
-As always, the artistic merit of your project plays a small role in your grade. The more interesting, varied, and procedural your project is, the higher your grade will be. Go crazy, make it vaporwave themed or something! Don't neglect the background of your scene; a static gray backdrop is pretty boring!
+For the GUI, I added the ability to change the mesh and an activate button to activate attraction to the mesh.  If you change the mesh, be sure to uncheck and check again the Activate Mesh button if it was already checked.
 
-## Extra credit (50 points max)
-* (5 - 15 points) Allow the user to place attractors and repulsors in the scene that influence the motion of the particles. The more variations of influencers you add, the more points you'll receive. Consider adding influencers that do not act uniformly in all directions, or that are not simply points in space but volumes. They should be visible in the scene in some manner.
-* (7 points) Have particles stretch along their velocity vectors to imitate motion blur.
-* (5 - 15 points) Allow particles to collide with and bounce off of obstacles in the scene. The more complex the shapes you collide particles with, the more points you'll earn.
-* (30 points) Animate a mesh and have the particles move along with the animation.
-* (15 points) Create a "flocking" mode for your scene where a smaller collection of particles moves around the environment following the [rules for flocking](https://en.wikipedia.org/wiki/Boids).
-* (15 points) Use audio to drive an attribute of your particles, whether that be color, velocity, size, shape, or something else!
-* (50 points) Create a cloth simulation mode for your scene where you attach particles to each other in a grid using infinitely stiff springs, and perform relaxation iterations over the grid each tick.
+The user also has the ability to place an Exertor in the scene.  Point that mouse at someplace in the scene, and press either W, E, or R.  W will place an attractor, E will place a repeller, and R will place an oscillator.  If you press Q, you can create a temporary force of your choosing at your mouse position for as long as you are holding Q.  Select the type of force you want from the GUI item Mouse Force.
+
+## Color
+
+![](shot-color.png)
+
+I had the particles become more red as their velocity increased, signifying the kinetic energy of the particle.  It maxes out at a pure red.  When stationary, the particle is purely its base color.
+
+## Mesh Attraction
+
+I loaded up to meshes that you can choose to create a constellation of, Knuckles and a Spaceship.  To do the attraction, I had each particle in the scene assigned to one vertex on the mesh, and had it have its own attractor at that position.  So, every particle would only have a single attractor that it would follow, and once every particle found its attractor, the shape would look like the mesh.
+
+## Extra Credit
+
+For extra credit I chose to have the user able to place a custom force type at a location in the scene.  The user interface is described up in the GUI section.  The user can place up to three different types of force types.  I also added a new type of force from the base two called an oscillator, which makes the particle oscillate around a point.  It will look as though the particle zooms through the point in the opposite direction, but it will then slow and turn around and zoom back, and back and forth indefinitely.

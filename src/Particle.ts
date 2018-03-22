@@ -188,9 +188,11 @@ class ParticleSystem {
   meshesActivated: boolean;
   currentMesh: string;
 
+  mouseExertorType: string;
+
   particleIndexToVertex: { [key:number]:Exertor; };
 
-  constructor(meshes: any, currentMesh: string) {
+  constructor(meshes: any, currentMesh: string, mouseExertorType: string) {
     this.particles = new Array<Particle>();
     this.exertors = new Array<Exertor>();
 
@@ -203,6 +205,8 @@ class ParticleSystem {
     this.exertors.push(new NoneExertor());
 
     this.particleCount = 0.0;
+
+    this.mouseExertorType = mouseExertorType;
 
     let n: number = 200.0;
 
@@ -297,7 +301,13 @@ class ParticleSystem {
   }
 
   updateUserForce(position: vec3) {
-    this.exertors[0] = new Attractor(position, 30, 100);
+    if(this.mouseExertorType == "Attractor") {
+      this.exertors[0] = new Attractor(position, 30, 100);
+    } else if(this.mouseExertorType == "Repeller") {
+      this.exertors[0] = new Repeller(position, 30, 100);
+    } else if(this.mouseExertorType == "Oscillator") {
+      this.exertors[0] = new Oscillator(position, 30, 100);
+    }
   }
 
   cancelUserForce() {
@@ -334,6 +344,10 @@ class ParticleSystem {
 
   deactivateMesh() {
     this.meshesActivated = false;
+  }
+
+  changeMouseExertorType(value:string) {
+    this.mouseExertorType = value;
   }
 
 };
