@@ -46,3 +46,7 @@ I loaded up to meshes that you can choose to create a constellation of, Knuckles
 ## Extra Credit
 
 For extra credit I chose to have the user able to place a custom force type at a location in the scene.  The user interface is described up in the GUI section.  The user can place up to three different types of force types.  I also added a new type of force from the base two called an oscillator, which makes the particle oscillate around a point.  It will look as though the particle zooms through the point in the opposite direction, but it will then slow and turn around and zoom back, and back and forth indefinitely.
+
+## Warnings
+
+My ray cast implementation is not currently working currently.  So if you zoom out too far or rotate the camera and then try to click the mouse and create a force at the mouse position, the force will not be placed where you expect.  For best results, zoom out just a little so you can see the box of particles and do not rotate the camera, unless you are done placing forces and just want to see the results or you are looking at the mesh constellation.
