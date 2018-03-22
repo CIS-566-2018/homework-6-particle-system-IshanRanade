@@ -35,6 +35,8 @@ const controls = {
 let square: Square;
 let time: number = 0.0;
 
+let exertorSquare: Square;
+
 let camera: Camera;
 
 let particleSystem: ParticleSystem;
@@ -45,6 +47,9 @@ function loadScene() {
   square = new Square();
   square.create();
 
+  exertorSquare = new Square();
+  exertorSquare.create();
+
   particleSystem = new ParticleSystem(meshes, startMesh, startMouseExertorType);
 }
 
@@ -53,6 +58,9 @@ function update() {
 
   square.setInstanceVBOs(particleSystem.getOffsetsArray(), particleSystem.getColorsArray());
   square.setNumInstances(particleSystem.getInstanceCount());
+
+  exertorSquare.setInstanceVBOs(particleSystem.exertorsOffsetsArray, particleSystem.exertorsColorsArray);
+  exertorSquare.setNumInstances(particleSystem.currentExertorCount);
 }
 
 function mouseMove(e: MouseEvent) {
@@ -69,18 +77,19 @@ function mouseMove(e: MouseEvent) {
 function getWorldPosition(mouseX: number, mouseY: number) {
   let inside: vec4 = vec4.fromValues(mouseX / window.innerWidth * 2 - 1, 1 - mouseY / window.innerHeight * 2, 1, 1);
   vec4.scale(inside, inside, camera.far);
-  let tempVec: vec4 = vec4.transformMat4(vec4.create(), inside, camera.projectionMatrix);
+  let tempVec: vec4 = vec4.transformMat4(vec4.create(), inside, 
+    mat4.invert(mat4.create(), camera.projectionMatrix));
+  vec4.transformMat4(tempVec, tempVec, mat4.invert(mat4.create(), camera.viewMatrix));
 
   let l0: vec3 = vec3.fromValues(tempVec[0], tempVec[1], tempVec[2]);
 
   let l: vec3 = vec3.create();
   vec3.subtract(l, l0, camera.position);
   vec3.normalize(l, l);
-  let eye = vec3.create();
-  vec3.copy(eye, camera.position);
 
   let n: vec3 = vec3.create();
-  vec3.subtract(n, camera.position, camera.target);
+  vec3.subtract(n, camera.target, camera.position);
+  //vec3.negate(n, n);
   vec3.normalize(n, n);
   let p0: vec3 = vec3.add(vec3.create(), camera.target, camera.up);
 
@@ -182,6 +191,13 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/particle-frag.glsl')),
   ]);
 
+  const exertorShader = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/exertor-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/exertor-frag.glsl')),
+  ]);
+
+
+
   // This function will be called every frame
   function tick() {
     update();
@@ -192,8 +208,14 @@ function main() {
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
     renderer.render(camera, lambert, [
-      square,
+      square
     ]);
+
+    renderer.render(camera, exertorShader, [
+      exertorSquare
+    ]);
+
+
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame

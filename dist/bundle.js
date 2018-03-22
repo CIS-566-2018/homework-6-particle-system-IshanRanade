@@ -3388,18 +3388,23 @@ const controls = {
 };
 let square;
 let time = 0.0;
+let exertorSquare;
 let camera;
 let particleSystem;
 let mousePosition = null;
 function loadScene() {
     square = new __WEBPACK_IMPORTED_MODULE_3__geometry_Square__["a" /* default */]();
     square.create();
+    exertorSquare = new __WEBPACK_IMPORTED_MODULE_3__geometry_Square__["a" /* default */]();
+    exertorSquare.create();
     particleSystem = new __WEBPACK_IMPORTED_MODULE_8__Particle__["a" /* default */](meshes, startMesh, startMouseExertorType);
 }
 function update() {
     particleSystem.update();
     square.setInstanceVBOs(particleSystem.getOffsetsArray(), particleSystem.getColorsArray());
     square.setNumInstances(particleSystem.getInstanceCount());
+    exertorSquare.setInstanceVBOs(particleSystem.exertorsOffsetsArray, particleSystem.exertorsColorsArray);
+    exertorSquare.setNumInstances(particleSystem.currentExertorCount);
 }
 function mouseMove(e) {
     var rect = document.getElementById('canvas').getBoundingClientRect();
@@ -3412,15 +3417,15 @@ function mouseMove(e) {
 function getWorldPosition(mouseX, mouseY) {
     let inside = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec4 */].fromValues(mouseX / window.innerWidth * 2 - 1, 1 - mouseY / window.innerHeight * 2, 1, 1);
     __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec4 */].scale(inside, inside, camera.far);
-    let tempVec = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec4 */].transformMat4(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec4 */].create(), inside, camera.projectionMatrix);
+    let tempVec = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec4 */].transformMat4(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec4 */].create(), inside, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* mat4 */].invert(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* mat4 */].create(), camera.projectionMatrix));
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["e" /* vec4 */].transformMat4(tempVec, tempVec, __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* mat4 */].invert(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["b" /* mat4 */].create(), camera.viewMatrix));
     let l0 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].fromValues(tempVec[0], tempVec[1], tempVec[2]);
     let l = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
     __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].subtract(l, l0, camera.position);
     __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].normalize(l, l);
-    let eye = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].copy(eye, camera.position);
     let n = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create();
-    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].subtract(n, camera.position, camera.target);
+    __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].subtract(n, camera.target, camera.position);
+    //vec3.negate(n, n);
     __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].normalize(n, n);
     let p0 = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].add(__WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].create(), camera.target, camera.up);
     let denom = __WEBPACK_IMPORTED_MODULE_0_gl_matrix__["d" /* vec3 */].dot(n, l);
@@ -3507,6 +3512,10 @@ function main() {
         new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(81)),
         new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(82)),
     ]);
+    const exertorShader = new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["b" /* default */]([
+        new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["a" /* Shader */](gl.VERTEX_SHADER, __webpack_require__(83)),
+        new __WEBPACK_IMPORTED_MODULE_7__rendering_gl_ShaderProgram__["a" /* Shader */](gl.FRAGMENT_SHADER, __webpack_require__(84)),
+    ]);
     // This function will be called every frame
     function tick() {
         update();
@@ -3516,7 +3525,10 @@ function main() {
         gl.viewport(0, 0, window.innerWidth, window.innerHeight);
         renderer.clear();
         renderer.render(camera, lambert, [
-            square,
+            square
+        ]);
+        renderer.render(camera, exertorShader, [
+            exertorSquare
         ]);
         stats.end();
         // Tell the browser to call `tick` again whenever it renders a new frame
@@ -15535,6 +15547,8 @@ class Repeller extends Exertor {
 class ParticleSystem {
     constructor(meshes, currentMesh, mouseExertorType) {
         this.rng = seedrandom(0);
+        this.maxExertors = 20;
+        this.currentExertorCount = 0;
         this.particles = new Array();
         this.exertors = new Array();
         this.meshes = meshes;
@@ -15562,6 +15576,8 @@ class ParticleSystem {
         }
         this.offsetsArray = new Float32Array(this.particleCount * 3);
         this.colorsArray = new Float32Array(this.particleCount * 4);
+        this.exertorsOffsetsArray = new Float32Array(this.maxExertors * 3);
+        this.exertorsColorsArray = new Float32Array(this.maxExertors * 4);
     }
     update() {
         let deltaT = 1.0 / 20.0;
@@ -15630,14 +15646,38 @@ class ParticleSystem {
         this.exertors[0] = new NoneExertor();
     }
     addNewForce(position, type) {
-        if (type == "Oscillator") {
-            this.exertors.push(new Oscillator(position, 30, 100));
-        }
-        else if (type == "Attractor") {
-            this.exertors.push(new Attractor(position, 30, 100));
-        }
-        else if (type == "Repeller") {
-            this.exertors.push(new Repeller(position, 30, 100));
+        if (this.currentExertorCount < this.maxExertors) {
+            if (type == "Oscillator") {
+                this.exertors.push(new Oscillator(position, 30, 100));
+            }
+            else if (type == "Attractor") {
+                this.exertors.push(new Attractor(position, 30, 100));
+            }
+            else if (type == "Repeller") {
+                this.exertors.push(new Repeller(position, 30, 100));
+            }
+            this.exertorsOffsetsArray[this.currentExertorCount * 3] = position[0];
+            this.exertorsOffsetsArray[this.currentExertorCount * 3 + 1] = position[1];
+            this.exertorsOffsetsArray[this.currentExertorCount * 3 + 2] = position[2];
+            if (type == "Oscillator") {
+                this.exertorsColorsArray[this.currentExertorCount * 4] = 0;
+                this.exertorsColorsArray[this.currentExertorCount * 4 + 1] = 1;
+                this.exertorsColorsArray[this.currentExertorCount * 4 + 2] = 0;
+                this.exertorsColorsArray[this.currentExertorCount * 4 + 3] = 1;
+            }
+            else if (type == "Attractor") {
+                this.exertorsColorsArray[this.currentExertorCount * 4] = 1;
+                this.exertorsColorsArray[this.currentExertorCount * 4 + 1] = 0;
+                this.exertorsColorsArray[this.currentExertorCount * 4 + 2] = 0;
+                this.exertorsColorsArray[this.currentExertorCount * 4 + 3] = 1;
+            }
+            else if (type == "Repeller") {
+                this.exertorsColorsArray[this.currentExertorCount * 4] = 1;
+                this.exertorsColorsArray[this.currentExertorCount * 4 + 1] = 1;
+                this.exertorsColorsArray[this.currentExertorCount * 4 + 2] = 0;
+                this.exertorsColorsArray[this.currentExertorCount * 4 + 3] = 1;
+            }
+            this.currentExertorCount += 1;
         }
     }
     activateMesh() {
@@ -16680,6 +16720,18 @@ module.exports = "#version 300 es\n\nuniform mat4 u_ViewProj;\nuniform float u_T
 
 /***/ }),
 /* 82 */
+/***/ (function(module, exports) {
+
+module.exports = "#version 300 es\nprecision highp float;\n\nin vec4 fs_Col;\nin vec4 fs_Pos;\n\nout vec4 out_Col;\n\nvoid main()\n{\n    float dist = 1.0 - (length(fs_Pos.xyz) * 2.0);\n    out_Col = vec4(dist) * fs_Col;\n}\n"
+
+/***/ }),
+/* 83 */
+/***/ (function(module, exports) {
+
+module.exports = "#version 300 es\n\nuniform mat4 u_ViewProj;\nuniform float u_Time;\n\nuniform mat3 u_CameraAxes; // Used for rendering particles as billboards (quads that are always looking at the camera)\n// gl_Position = center + vs_Pos.x * camRight + vs_Pos.y * camUp;\n\nin vec4 vs_Pos; // Non-instanced; each particle is the same quad drawn in a different place\nin vec4 vs_Col; // An instanced rendering attribute; each particle instance has a different color\nin vec3 vs_Translate; // Another instance rendering attribute used to position each quad instance in the scene\n\nout vec4 fs_Col;\nout vec4 fs_Pos;\n\nvoid main()\n{\n    fs_Col = vs_Col;\n    fs_Pos = vs_Pos;\n\n    vec3 offset = vs_Translate;\n    //offset.z = (sin((u_Time + offset.x) * 3.14159 * 0.1) + cos((u_Time + offset.y) * 3.14159 * 0.1)) * 1.5;\n\n    vec3 billboardPos = offset + vs_Pos.x * u_CameraAxes[0] * 12.0f + 12.0f * vs_Pos.y * u_CameraAxes[1];\n\n    gl_Position = u_ViewProj * vec4(billboardPos, 1.0);\n}\n"
+
+/***/ }),
+/* 84 */
 /***/ (function(module, exports) {
 
 module.exports = "#version 300 es\nprecision highp float;\n\nin vec4 fs_Col;\nin vec4 fs_Pos;\n\nout vec4 out_Col;\n\nvoid main()\n{\n    float dist = 1.0 - (length(fs_Pos.xyz) * 2.0);\n    out_Col = vec4(dist) * fs_Col;\n}\n"

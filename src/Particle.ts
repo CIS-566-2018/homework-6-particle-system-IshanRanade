@@ -180,6 +180,9 @@ class ParticleSystem {
   offsetsArray: Float32Array;
   colorsArray: Float32Array;
 
+  exertorsOffsetsArray: Float32Array;
+  exertorsColorsArray: Float32Array;
+
   exertors: Array<Exertor>;
 
   rng = seedrandom(0);
@@ -189,6 +192,9 @@ class ParticleSystem {
   currentMesh: string;
 
   mouseExertorType: string;
+
+  maxExertors: number = 20;
+  currentExertorCount: number = 0;
 
   particleIndexToVertex: { [key:number]:Exertor; };
 
@@ -231,6 +237,9 @@ class ParticleSystem {
 
     this.offsetsArray = new Float32Array(this.particleCount * 3);
     this.colorsArray = new Float32Array(this.particleCount * 4);
+
+    this.exertorsOffsetsArray = new Float32Array(this.maxExertors * 3);
+    this.exertorsColorsArray = new Float32Array(this.maxExertors * 4);
   }
 
   update() {
@@ -315,13 +324,40 @@ class ParticleSystem {
   }
 
   addNewForce(position: vec3, type: string) {
-    if(type == "Oscillator") {
-      this.exertors.push(new Oscillator(position, 30, 100));
-    } else if(type == "Attractor") {
-      this.exertors.push(new Attractor(position, 30, 100));
-    } else if(type == "Repeller") {
-      this.exertors.push(new Repeller(position, 30, 100));
+    if(this.currentExertorCount < this.maxExertors) {
+      if(type == "Oscillator") {
+        this.exertors.push(new Oscillator(position, 30, 100));
+      } else if(type == "Attractor") {
+        this.exertors.push(new Attractor(position, 30, 100));
+      } else if(type == "Repeller") {
+        this.exertors.push(new Repeller(position, 30, 100));
+      }
+
+      this.exertorsOffsetsArray[this.currentExertorCount*3]   = position[0];
+      this.exertorsOffsetsArray[this.currentExertorCount*3+1] = position[1];
+      this.exertorsOffsetsArray[this.currentExertorCount*3+2] = position[2];
+
+      if(type == "Oscillator") {
+        this.exertorsColorsArray[this.currentExertorCount*4] = 0;
+        this.exertorsColorsArray[this.currentExertorCount*4+1] = 1;
+        this.exertorsColorsArray[this.currentExertorCount*4+2] = 0;
+        this.exertorsColorsArray[this.currentExertorCount*4+3] = 1;
+      } else if(type == "Attractor") {
+        this.exertorsColorsArray[this.currentExertorCount*4] = 1;
+        this.exertorsColorsArray[this.currentExertorCount*4+1] = 0;
+        this.exertorsColorsArray[this.currentExertorCount*4+2] = 0;
+        this.exertorsColorsArray[this.currentExertorCount*4+3] = 1;
+      } else if(type == "Repeller") {
+        this.exertorsColorsArray[this.currentExertorCount*4] = 1;
+        this.exertorsColorsArray[this.currentExertorCount*4+1] = 1;
+        this.exertorsColorsArray[this.currentExertorCount*4+2] = 0;
+        this.exertorsColorsArray[this.currentExertorCount*4+3] = 1;
+      }
+
+
+      this.currentExertorCount += 1;
     }
+
   }
 
   activateMesh() {
